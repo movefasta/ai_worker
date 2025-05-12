@@ -56,6 +56,8 @@ namespace joint_trajectory_command_broadcaster
  * (position, velocity, effort).
  * - \b dynamic_joint_states (control_msgs::msg::DynamicJointState): Joint states regardless of
  * its interface type.
+ * - \b joint_trajectory (trajectory_msgs::msg::JointTrajectory): Joint trajectory command.
+ * - \b joint_trajectory_with_timestamp (trajectory_msgs::msg::JointTrajectory): Joint trajectory command with current timestamp.
  */
 class JointTrajectoryCommandBroadcaster : public controller_interface::ControllerInterface
 {
@@ -103,8 +105,12 @@ protected:
   std::vector<double> joint_offsets_;
   std::shared_ptr<rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>>
   joint_trajectory_publisher_;
+  std::shared_ptr<rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>>
+  joint_trajectory_with_timestamp_publisher_;
   std::shared_ptr<realtime_tools::RealtimePublisher<trajectory_msgs::msg::JointTrajectory>>
   realtime_joint_trajectory_publisher_;
+  std::shared_ptr<realtime_tools::RealtimePublisher<trajectory_msgs::msg::JointTrajectory>>
+  realtime_joint_trajectory_with_timestamp_publisher_;
 
   std::unordered_map<std::string, std::unordered_map<std::string, double>> name_if_value_mapping_;
 

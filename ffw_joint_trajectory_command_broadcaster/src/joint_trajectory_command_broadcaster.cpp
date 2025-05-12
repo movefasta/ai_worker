@@ -113,9 +113,18 @@ controller_interface::CallbackReturn JointTrajectoryCommandBroadcaster::on_confi
       get_node()->create_publisher<trajectory_msgs::msg::JointTrajectory>(
       topic_name_prefix + "joint_trajectory", rclcpp::SystemDefaultsQoS());
 
+    // Create publisher for JointTrajectory with timestamp
+    joint_trajectory_with_timestamp_publisher_ =
+      get_node()->create_publisher<trajectory_msgs::msg::JointTrajectory>(
+      topic_name_prefix + "joint_trajectory_with_timestamp", rclcpp::SystemDefaultsQoS());
+
     realtime_joint_trajectory_publisher_ =
       std::make_shared<realtime_tools::RealtimePublisher<trajectory_msgs::msg::JointTrajectory>>(
       joint_trajectory_publisher_);
+
+    realtime_joint_trajectory_with_timestamp_publisher_ =
+      std::make_shared<realtime_tools::RealtimePublisher<trajectory_msgs::msg::JointTrajectory>>(
+      joint_trajectory_with_timestamp_publisher_);
   } catch (const std::exception & e) {
     // get_node() may throw, logging raw here
     fprintf(stderr, "Exception thrown during init stage with message: %s \n", e.what());
@@ -264,7 +273,7 @@ double get_value(
 }
 
 controller_interface::return_type JointTrajectoryCommandBroadcaster::update(
-  const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
+  const rclcpp::Time & time, const rclcpp::Duration & /*period*/)
 {
   // Update stored values
   for (const auto & state_interface : state_interfaces_) {
@@ -313,6 +322,43 @@ controller_interface::return_type JointTrajectoryCommandBroadcaster::update(
     traj_msg.points[0].time_from_start = rclcpp::Duration(0, 0);  // immediate
 
     realtime_joint_trajectory_publisher_->unlockAndPublish();
+  }
+
+  // Publish JointTrajectory message with current positions and actual timestamp
+  if (realtime_joint_trajectory_with_timestamp_publisher_ && realtime_joint_trajectory_with_timestamp_publisher_->trylock()) {
+    auto & traj_msg = realtime_joint_trajectory_with_timestamp_publisher_->msg_;
+    traj_msg.header.stamp = time;  // Use the current timestamp
+    traj_msg.joint_names = joint_names_;
+
+    const size_t num_joints = joint_names_.size();
+    traj_msg.points.clear();
+    traj_msg.points.resize(1);
+    traj_msg.points[0].positions.resize(num_joints, kUninitializedValue);
+
+    for (size_t i = 0; i < num_joints; ++i) {
+      double pos_value =
+        get_value(name_if_value_mapping_, joint_names_[i], HW_IF_POSITION);
+
+      // Check if the current joint is in the reverse_joints parameter
+      if (
+        std::find(
+          params_.reverse_joints.begin(),
+          params_.reverse_joints.end(),
+          joint_names_[i]) != params_.reverse_joints.end())
+      {
+        pos_value = -pos_value;
+      }
+
+      // Apply offset
+      pos_value += joint_offsets_[i];
+
+      traj_msg.points[0].positions[i] = pos_value;
+    }
+
+    // Optionally set velocities/accelerations/time_from_start if needed
+    traj_msg.points[0].time_from_start = rclcpp::Duration(0, 0);  // immediate
+
+    realtime_joint_trajectory_with_timestamp_publisher_->unlockAndPublish();
   }
 
   return controller_interface::return_type::OK;
