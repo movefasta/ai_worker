@@ -1,0 +1,51 @@
+/**:
+  controller_manager:
+    ros__parameters:
+      update_rate: 100
+      use_sim_time: false
+
+      joint_state_broadcaster:
+        type: joint_state_broadcaster/JointStateBroadcaster
+
+      joint_trajectory_command_broadcaster_right:
+        type: joint_trajectory_command_broadcaster/JointTrajectoryCommandBroadcaster
+
+      spring_actuator_controller_right:
+        type: spring_actuator_controller/SpringActuatorController
+
+
+/**:
+  joint_trajectory_command_broadcaster_right:
+    ros__parameters:
+      joints:
+        - arm_r_joint1
+        - arm_r_joint2
+        - arm_r_joint3
+        - arm_r_joint4
+        - arm_r_joint5
+        - arm_r_joint6
+        - gripper_r_joint1
+      interfaces:
+        - position
+      offsets:
+        - 0.0
+        - 0.0
+        - 0.0
+        - 0.0
+        - 0.0
+        - 0.0
+        - 0.3
+      action_monitor_rate: 20.0
+      use_local_topics: true
+
+/**:
+  spring_actuator_controller_right:
+    ros__parameters:
+      joints:
+        - gripper_r_joint1
+      command_interfaces:
+        - effort
+      state_interfaces:
+        - position
+        - velocity
+
