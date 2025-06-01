@@ -11,9 +11,9 @@
 
   <link name="world"/>
 
-  <xacro:ffw_leader_body parent="$(arg prefix)world" prefix="$(arg prefix)">
+  <xacro:ffw_single_leader_body parent="$(arg prefix)world" prefix="$(arg prefix)">
     <origin xyz="0 0 0" rpy="0 0 0" />
-  </xacro:ffw_leader_body>
+  </xacro:ffw_single_leader_body>
 
   <joint name="$(arg prefix)gripper_r_joint1" type="revolute">
     <origin xyz="0 0 0" rpy="0 0 0"/>
