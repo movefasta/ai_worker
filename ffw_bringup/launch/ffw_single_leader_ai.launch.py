@@ -50,6 +50,8 @@ def generate_launch_description():
         executable='ros2_control_node',
         parameters=[robot_controllers],
         output='both',
+        prefix=['kitty -e gdb -ex run --args']
+        # prefix=["gdbserver localhost:3000"],
     )
 
     robot_description_content = Command(
